@@ -1,0 +1,18 @@
+# Single-node MongoDB with replica set (required by Prisma for MongoDB writes).
+# Usage:
+#   docker compose up -d
+#   npm run db:rs-init   # once per fresh volume
+# Then use DATABASE_URL from .env.example (replicaSet=rs0).
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: kalarica-mongo
+    ports:
+      - "27017:27017"
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - kalarica_mongo_data:/data/db
+
+volumes:
+  kalarica_mongo_data:
