@@ -9,14 +9,34 @@ const authSecret =
   process.env.BETTER_AUTH_SECRET ??
   "kalarica-local-dev-secret-min-32-chars-rotate-for-prod";
 
+function normalizeOrigin(url: string | undefined): string | undefined {
+  const t = url?.trim();
+  if (!t) return undefined;
+  return t.replace(/\/$/, "");
+}
+
+const baseURL = normalizeOrigin(process.env.BETTER_AUTH_URL) ?? "http://localhost:3000";
+
+const extraTrustedOrigins =
+  process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
+    .map((o) => normalizeOrigin(o))
+    .filter((o): o is string => Boolean(o)) ?? [];
+
+const trustedOrigins = [
+  ...new Set(
+    [
+      baseURL,
+      normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL),
+      ...extraTrustedOrigins,
+    ].filter((o): o is string => Boolean(o)),
+  ),
+];
+
 export const auth = betterAuth({
   appName: "Kalarica",
   secret: authSecret,
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
-  trustedOrigins:
-    process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
-      .map((o) => o.trim())
-      .filter(Boolean) ?? ["http://localhost:3000"],
+  baseURL,
+  trustedOrigins,
   database: prismaAdapter(prisma, {
     provider: "mongodb",
   }),
