@@ -130,7 +130,7 @@ export function MetaSetupProgress({ env }: { env: MetaSyncEnvFlags }) {
           stepNumber={3}
           done={env.pageAccessToken}
           title="Page access token"
-          hint="META_PAGE_ACCESS_TOKEN — Graph API Explorer for testing, or Business Manager / system user for production."
+          hint="META_PAGE_ACCESS_TOKEN — Page token with pages_messaging for Messenger + lead fetch. Graph API Explorer: add pages_messaging → me/accounts?fields=access_token. Production: Business Manager system user."
         />
       </div>
     </div>

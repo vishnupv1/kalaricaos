@@ -56,6 +56,17 @@ enum PaymentMode {
   OTHER
 }
 
+enum MetaConversationStatus {
+  UNREAD
+  READ
+  REPLIED
+}
+
+enum MetaConversationPlatform {
+  MESSENGER
+  INSTAGRAM
+}
+
 // --- Better Auth ---
 
 model User {
@@ -379,6 +390,45 @@ model Notification {
   deletedAt   DateTime?
   createdById String?
   updatedById String?
+}
+
+model MetaConversation {
+  id              String                    @id @default(uuid()) @map("_id")
+  externalId      String                    @unique
+  pageId          String
+  platform        MetaConversationPlatform?
+  participantId   String?
+  participantName String?
+  status          MetaConversationStatus    @default(UNREAD)
+  unreadCount     Int                       @default(0)
+  snippet         String?
+  lastMessageAt   DateTime?
+  lastMessageFrom String?
+  adName          String?
+  raw             Json?
+  messages        MetaMessage[]
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  deletedAt       DateTime?
+  createdById     String?
+  updatedById     String?
+}
+
+model MetaMessage {
+  id             String           @id @default(uuid()) @map("_id")
+  externalId     String           @unique
+  conversationId String
+  conversation   MetaConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  pageId         String
+  platform       MetaConversationPlatform?
+  body           String?
+  fromId         String?
+  fromName       String?
+  fromRole       String?
+  sentAt         DateTime?
+  raw            Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 model AuditLog {

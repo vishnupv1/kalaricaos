@@ -271,9 +271,14 @@ function MetaSyncHeaderBadges({
 }) {
   return (
     <div className="flex flex-col items-end gap-2">
-      <Button variant="outline" size="sm" render={<Link href="/dashboard/meta/ads" />}>
-        Ads analytics
-      </Button>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" size="sm" render={<Link href="/dashboard/meta/ads" />}>
+          Ads analytics
+        </Button>
+        <Button variant="outline" size="sm" render={<Link href="/dashboard/meta/messages" />}>
+          Ad messages
+        </Button>
+      </div>
       <div className="flex flex-wrap justify-end gap-2">
         <Badge variant="secondary" className="shrink-0 font-normal">
           Webhook live
