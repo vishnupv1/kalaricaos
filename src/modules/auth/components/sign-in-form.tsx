@@ -18,6 +18,7 @@ export function SignInForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (pending) return;
     setError(null);
     setPending(true);
     const result = await authClient.signIn.email({
@@ -29,8 +30,7 @@ export function SignInForm() {
       setError(result.error.message ?? "Could not sign in.");
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+    router.replace("/dashboard");
   }
 
   return (
