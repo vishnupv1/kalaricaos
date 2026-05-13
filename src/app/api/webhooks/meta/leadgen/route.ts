@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getMetaAppSecret, getMetaVerifyToken } from "@/modules/meta/server/meta-credentials";
+import { processMetaMessagingWebhook } from "@/modules/meta/server/meta-messaging-webhook";
 import { processMetaLeadgenWebhookLeadIds } from "@/modules/meta/server/meta-lead-sync";
 import {
   extractLeadgenIdsFromWebhook,
@@ -38,16 +39,25 @@ export async function POST(request: Request) {
     return new NextResponse("Invalid signature", { status: 401 });
   }
 
-  let payload: MetaLeadgenWebhookPayload;
+  let body: unknown;
   try {
-    payload = JSON.parse(rawBody) as MetaLeadgenWebhookPayload;
+    body = JSON.parse(rawBody);
   } catch {
     return new NextResponse("Invalid JSON", { status: 400 });
   }
 
+  const payload = body as MetaLeadgenWebhookPayload;
+  const messagingPayload = body as Parameters<typeof processMetaMessagingWebhook>[0];
+  const hasMessaging = (messagingPayload.entry ?? []).some((entry) => (entry.messaging?.length ?? 0) > 0);
+  const messagingResult = hasMessaging ? await processMetaMessagingWebhook(messagingPayload) : null;
+
   const leadgenIds = extractLeadgenIdsFromWebhook(payload);
   if (leadgenIds.length === 0) {
-    return NextResponse.json({ ok: true, processed: 0 });
+    return NextResponse.json({
+      ok: true,
+      processed: messagingResult?.processed ?? 0,
+      messaging: messagingResult?.processed ?? 0,
+    });
   }
 
   const results = await processMetaLeadgenWebhookLeadIds(leadgenIds);
@@ -62,6 +72,7 @@ export async function POST(request: Request) {
     processed: results.length,
     created: results.filter((r) => r.ok && r.created).length,
     updated: results.filter((r) => r.ok && !r.created).length,
+    messaging: messagingResult?.processed ?? 0,
     errors: failed.map((r) => ({ metaLeadId: r.metaLeadId, error: r.error })),
   });
 }

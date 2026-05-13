@@ -22,7 +22,7 @@ import {
 } from "@/modules/meta/server/meta-conversation-queries";
 import { getMetaPageAccessToken } from "@/modules/meta/server/meta-credentials";
 import { getMetaMessagingAccessHealth } from "@/modules/meta/server/meta-messaging-health";
-import { getMetaMessagingWebhookCallbackUrl } from "@/modules/meta/server/meta-sync-env";
+import { getMetaMessagingWebhookCallbackUrl, getMetaWebhookCallbackUrl } from "@/modules/meta/server/meta-sync-env";
 import { requireMetaAccess } from "@/modules/meta/server/require-meta-access";
 
 function statusBadgeVariant(status: MetaConversationStatus) {
@@ -63,6 +63,7 @@ export default async function MetaMessagesPage() {
   ]);
 
   const messagingWebhookUrl = getMetaMessagingWebhookCallbackUrl();
+  const pageWebhookUrl = getMetaWebhookCallbackUrl();
 
   return (
     <div className="w-full space-y-8 pb-10">
@@ -98,13 +99,28 @@ export default async function MetaMessagesPage() {
         <CardHeader>
           <CardTitle className="text-base">Messaging webhook</CardTitle>
           <CardDescription>
-            In Meta Developers → Webhooks → Page, subscribe to <code className="text-xs">messages</code> with this
-            callback URL and your <code className="text-xs">META_VERIFY_TOKEN</code>. New DMs are saved automatically.
+            Use the same Page callback as leads, or the dedicated messaging URL after deploy. Subscribe to{" "}
+            <code className="text-xs">messages</code> on your Page webhook (product: Page).
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap items-center gap-2">
-          <code className="max-w-full truncate rounded bg-muted px-2 py-1 text-xs">{messagingWebhookUrl}</code>
-          <MetaCopyButton text={messagingWebhookUrl} label="Copy URL" />
+        <CardContent className="space-y-3">
+          <div>
+            <p className="mb-1 text-xs font-medium text-muted-foreground">Use now (live on production)</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <code className="max-w-full truncate rounded bg-muted px-2 py-1 text-xs">{pageWebhookUrl}</code>
+              <MetaCopyButton text={pageWebhookUrl} label="Copy URL" />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Same callback as leads — add the <code className="font-mono">messages</code> field on your Page subscription.
+            </p>
+          </div>
+          <div>
+            <p className="mb-1 text-xs font-medium text-muted-foreground">Dedicated URL (after next deploy)</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <code className="max-w-full truncate rounded bg-muted px-2 py-1 text-xs">{messagingWebhookUrl}</code>
+              <MetaCopyButton text={messagingWebhookUrl} label="Copy URL" />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
