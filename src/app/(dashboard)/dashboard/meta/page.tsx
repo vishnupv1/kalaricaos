@@ -1,6 +1,8 @@
 import { ExternalLinkIcon } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -17,6 +19,7 @@ import {
   getResolvedMetaAdAccountAct,
   getResolvedMetaPageId,
 } from "@/modules/meta/server/meta-sync-env";
+import { getMetaMarketingAccessToken } from "@/modules/meta/server/meta-credentials";
 import { requireMetaAccess } from "@/modules/meta/server/require-meta-access";
 
 function EnvRow({ label, name, set }: { label: string; name: string; set: boolean }) {
@@ -63,6 +66,7 @@ export default async function MetaSyncPage() {
   const pageId = getResolvedMetaPageId();
   const adAccountAct = getResolvedMetaAdAccountAct();
   const allCreds = env.appId && env.appSecret && env.verifyToken && env.pageAccessToken;
+  const hasMarketingToken = Boolean(getMetaMarketingAccessToken());
 
   const [initialHealth, leadStats] = await Promise.all([
     env.pageAccessToken ? getMetaSyncHealth() : Promise.resolve(null),
@@ -75,6 +79,7 @@ export default async function MetaSyncPage() {
         allCreds={allCreds}
         initialHealth={initialHealth}
         pageAccessTokenSet={env.pageAccessToken}
+        hasMarketingToken={hasMarketingToken}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -98,6 +103,7 @@ export default async function MetaSyncPage() {
             <EnvRow label="App secret" name="META_APP_SECRET" set={env.appSecret} />
             <EnvRow label="Webhook verify token" name="META_VERIFY_TOKEN" set={env.verifyToken} />
             <EnvRow label="Page access token" name="META_PAGE_ACCESS_TOKEN" set={env.pageAccessToken} />
+            <EnvRow label="Marketing API token" name="META_MARKETING_ACCESS_TOKEN" set={hasMarketingToken} />
           </CardContent>
         </Card>
       </div>
@@ -214,10 +220,12 @@ function MetaSyncHeader({
   allCreds,
   initialHealth,
   pageAccessTokenSet,
+  hasMarketingToken,
 }: {
   allCreds: boolean;
   initialHealth: Awaited<ReturnType<typeof getMetaSyncHealth>> | null;
   pageAccessTokenSet: boolean;
+  hasMarketingToken: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -230,16 +238,7 @@ function MetaSyncHeader({
             Developers with the callback URL below, then submit a test lead to confirm end-to-end delivery.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary" className="shrink-0 font-normal">
-            Webhook live
-          </Badge>
-          {initialHealth?.ok ? (
-            <Badge variant="secondary" className="shrink-0 border-emerald-500/30 bg-emerald-500/10 font-normal text-emerald-800 dark:text-emerald-300">
-              Graph API OK
-            </Badge>
-          ) : null}
-        </div>
+        <MetaSyncHeaderBadges initialHealth={initialHealth} hasMarketingToken={hasMarketingToken} />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -259,6 +258,37 @@ function MetaSyncHeader({
           </p>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function MetaSyncHeaderBadges({
+  initialHealth,
+  hasMarketingToken,
+}: {
+  initialHealth: Awaited<ReturnType<typeof getMetaSyncHealth>> | null;
+  hasMarketingToken: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-end gap-2">
+      <Button variant="outline" size="sm" render={<Link href="/dashboard/meta/ads" />}>
+        Ads analytics
+      </Button>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Badge variant="secondary" className="shrink-0 font-normal">
+          Webhook live
+        </Badge>
+        {initialHealth?.ok ? (
+          <Badge variant="secondary" className="shrink-0 border-emerald-500/30 bg-emerald-500/10 font-normal text-emerald-800 dark:text-emerald-300">
+            Graph API OK
+          </Badge>
+        ) : null}
+        {hasMarketingToken ? (
+          <Badge variant="outline" className="shrink-0 font-normal">
+            Marketing token set
+          </Badge>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -20,7 +20,7 @@ export type MetaSyncHealth = {
   error?: string;
 };
 
-async function graphGet<T>(path: string, accessToken: string): Promise<T> {
+export async function graphGet<T>(path: string, accessToken: string): Promise<T> {
   const url = new URL(metaGraphUrl(path));
   url.searchParams.set("access_token", accessToken);
   const res = await fetch(url, { method: "GET", cache: "no-store" });

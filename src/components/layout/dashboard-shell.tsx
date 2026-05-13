@@ -17,6 +17,7 @@ const nav = [
   { href: "/dashboard/inventory", label: "Inventory" },
   { href: "/dashboard/leads", label: "Leads" },
   { href: "/dashboard/meta", label: "Meta sync" },
+  { href: "/dashboard/meta/ads", label: "Meta ads" },
   { href: "/dashboard/orders", label: "Orders" },
 ] as const;
 

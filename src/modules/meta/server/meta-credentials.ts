@@ -19,6 +19,11 @@ export function getMetaPageAccessToken(): string | undefined {
   return trimEnv("META_PAGE_ACCESS_TOKEN");
 }
 
+/** User or system token with `ads_read` for Marketing API / Insights (not the Page lead token). */
+export function getMetaMarketingAccessToken(): string | undefined {
+  return trimEnv("META_MARKETING_ACCESS_TOKEN") ?? trimEnv("META_PAGE_ACCESS_TOKEN");
+}
+
 export type MetaWebhookCredentials = {
   appSecret: string;
   verifyToken: string;
