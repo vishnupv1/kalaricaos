@@ -16,6 +16,7 @@ export type MetaAdsDailyPoint = {
 };
 
 export type MetaAdsCampaignChartRow = {
+  id: string;
   name: string;
   spend: number;
   reach: number;

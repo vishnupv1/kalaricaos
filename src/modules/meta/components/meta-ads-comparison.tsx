@@ -42,7 +42,7 @@ export function MetaAdsComparison({ ads }: { ads: MetaAdsCampaignChartRow[] }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {sorted.map((ad) => (
-          <AdMetricCard key={ad.name} ad={ad} maxima={sorted} />
+          <AdMetricCard key={ad.id} ad={ad} maxima={sorted} />
         ))}
       </CardContent>
     </Card>

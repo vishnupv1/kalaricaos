@@ -350,6 +350,7 @@ export async function getAccountDailyMetricsSeries(limitDays = 30): Promise<Meta
 
 export function toCampaignChartRows(rows: CampaignDashboardRow[]): MetaAdsCampaignChartRow[] {
   return rows.map((row) => ({
+    id: row.id,
     name: row.name,
     spend: row.spend,
     reach: row.reach,
@@ -379,6 +380,7 @@ export async function listAdChartRows(): Promise<MetaAdsCampaignChartRow[]> {
     const metric = ad.metrics[0];
     const raw = metric?.raw;
     return {
+      id: ad.id,
       name: ad.name,
       spend: metric?.spend ?? 0,
       reach: readMetricNumber(raw, "reach"),
