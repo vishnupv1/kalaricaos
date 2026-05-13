@@ -8,6 +8,7 @@ import {
   fetchAdsWithInsights,
   fetchCampaignsWithInsights,
 } from "@/modules/meta/server/meta-marketing";
+import { syncMetaAdSpendToExpenses } from "@/modules/meta/server/meta-expense-sync";
 
 export const campaignNotDeleted: Prisma.CampaignWhereInput = {
   OR: [{ deletedAt: null }, { deletedAt: { isSet: false } }],
@@ -94,6 +95,7 @@ export async function syncMetaCampaignsFromApi() {
   const metricDate = startOfUtcDay();
 
   await syncAccountDailyMetrics(daily);
+  const { syncedExpenses } = await syncMetaAdSpendToExpenses(daily);
 
   for (const row of campaigns) {
     const campaign = await prisma.campaign.upsert({
@@ -207,6 +209,7 @@ export async function syncMetaCampaignsFromApi() {
   return {
     syncedCampaigns: campaigns.length,
     syncedAds: ads.length,
+    syncedExpenses,
     accountSummary,
     metricDate,
     dailyPoints: daily.length,

@@ -9,7 +9,7 @@ import { getModuleActionContext } from "@/server/auth/action-context";
 export type MetaTestConnectionState = { ok: true; health: MetaSyncHealth } | { ok: false; error: string };
 
 export type MetaSyncAdsState =
-  | { ok: true; syncedCampaigns: number }
+  | { ok: true; syncedCampaigns: number; syncedAds: number; syncedExpenses: number }
   | { ok: false; error: string };
 
 export async function testMetaConnectionAction(): Promise<MetaTestConnectionState> {
@@ -33,7 +33,14 @@ export async function syncMetaAdsAction(): Promise<MetaSyncAdsState> {
     const result = await syncMetaCampaignsFromApi();
     revalidatePath("/dashboard/meta/ads");
     revalidatePath("/dashboard/meta");
-    return { ok: true, syncedCampaigns: result.syncedCampaigns };
+    revalidatePath("/dashboard/expenses");
+    revalidatePath("/dashboard");
+    return {
+      ok: true,
+      syncedCampaigns: result.syncedCampaigns,
+      syncedAds: result.syncedAds,
+      syncedExpenses: result.syncedExpenses,
+    };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Failed to sync ads from Meta" };
   }

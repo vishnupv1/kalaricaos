@@ -20,7 +20,9 @@ export function MetaAdsSyncButton() {
         setError(result.error);
         return;
       }
-      setMessage(`Synced ${result.syncedCampaigns} campaign${result.syncedCampaigns === 1 ? "" : "s"} from Meta.`);
+      setMessage(
+        `Synced ${result.syncedCampaigns} campaign${result.syncedCampaigns === 1 ? "" : "s"}, ${result.syncedAds} ad${result.syncedAds === 1 ? "" : "s"}, and ${result.syncedExpenses} marketing expense${result.syncedExpenses === 1 ? "" : "s"} from Meta.`,
+      );
     });
   }, []);
 
