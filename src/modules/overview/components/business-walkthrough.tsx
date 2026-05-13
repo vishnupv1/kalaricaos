@@ -43,7 +43,7 @@ export function BusinessWalkthrough({ userName, userEmail, role, data }: Busines
         </div>
         <div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground">
-            {userName ? `${userName.split(" ")[0]}'s business` : "Your business"}
+            {userName ? `Kalarica's business` : "Kalarica's business"}
           </h1>
           <p className="mt-2 max-w-3xl text-muted-foreground">
             A single walkthrough of how Kalarica is running — from ads and leads through catalog, spend, and fulfillment.

@@ -21,6 +21,55 @@ const nav = [
   { href: "/dashboard/orders", label: "Orders" },
 ] as const;
 
+function getActiveNavHref(pathname: string): string | null {
+  let best: string | null = null;
+
+  for (const item of nav) {
+    const matches =
+      item.href === "/dashboard"
+        ? pathname === "/dashboard"
+        : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+    if (matches && (!best || item.href.length > best.length)) {
+      best = item.href;
+    }
+  }
+
+  return best;
+}
+
+function navLinkClassName(isActive: boolean) {
+  return cn(
+    "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+    isActive
+      ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm ring-1 ring-sidebar-border/80"
+      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+  );
+}
+
+function SidebarNavLink({
+  href,
+  label,
+  isActive,
+  onNavigate,
+}: {
+  href: string;
+  label: string;
+  isActive: boolean;
+  onNavigate?: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={isActive ? "page" : undefined}
+      className={navLinkClassName(isActive)}
+      onClick={onNavigate}
+    >
+      {label}
+    </Link>
+  );
+}
+
 export function DashboardShell({
   children,
   userEmail,
@@ -31,6 +80,7 @@ export function DashboardShell({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pathname = usePathname();
   const mobileNavId = useId();
+  const activeHref = getActiveNavHref(pathname);
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -55,16 +105,12 @@ export function DashboardShell({
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 p-3">
           {nav.map((item) => (
-            <Link
+            <SidebarNavLink
               key={item.href}
               href={item.href}
-              className={cn(
-                "rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors",
-                "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              )}
-            >
-              {item.label}
-            </Link>
+              label={item.label}
+              isActive={item.href === activeHref}
+            />
           ))}
         </nav>
         <div className="border-t border-sidebar-border p-3 text-xs text-muted-foreground">
@@ -111,17 +157,13 @@ export function DashboardShell({
           </div>
           <nav className="flex flex-1 flex-col gap-0.5 p-3">
             {nav.map((item) => (
-              <Link
+              <SidebarNavLink
                 key={item.href}
                 href={item.href}
-                className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors",
-                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                )}
-                onClick={() => setMobileNavOpen(false)}
-              >
-                {item.label}
-              </Link>
+                label={item.label}
+                isActive={item.href === activeHref}
+                onNavigate={() => setMobileNavOpen(false)}
+              />
             ))}
           </nav>
           <div className="border-t border-sidebar-border p-3 text-xs text-muted-foreground">

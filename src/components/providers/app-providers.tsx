@@ -3,6 +3,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { LoadingProvider } from "@/components/loading/loading-provider";
+
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -15,5 +17,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LoadingProvider>{children}</LoadingProvider>
+    </QueryClientProvider>
+  );
 }
