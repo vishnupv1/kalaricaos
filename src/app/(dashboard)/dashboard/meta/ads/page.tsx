@@ -11,11 +11,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { MetaAdsCharts } from "@/modules/meta/components/meta-ads-charts";
 import { MetaAdsSyncButton } from "@/modules/meta/components/meta-ads-sync-button";
 import {
+  getAccountDailyMetricsSeries,
   getCampaignDashboardTotals,
   getLatestCampaignSyncDate,
+  listAdChartRows,
   listCampaignDashboardRows,
+  toCampaignChartRows,
 } from "@/modules/meta/server/campaign-queries";
 import { getMetaMarketingAccessToken } from "@/modules/meta/server/meta-credentials";
 import { requireMetaAccess } from "@/modules/meta/server/require-meta-access";
@@ -38,8 +42,15 @@ export default async function MetaAdsAnalyticsPage() {
   await requireMetaAccess();
 
   const hasMarketingToken = Boolean(getMetaMarketingAccessToken());
-  const [rows, lastSync] = await Promise.all([listCampaignDashboardRows(), getLatestCampaignSyncDate()]);
+  const [rows, lastSync, daily, adChartRows] = await Promise.all([
+    listCampaignDashboardRows(),
+    getLatestCampaignSyncDate(),
+    getAccountDailyMetricsSeries(30),
+    listAdChartRows(),
+  ]);
   const totals = await getCampaignDashboardTotals(rows);
+  const comparisonChartRows =
+    adChartRows.length > 0 ? adChartRows : toCampaignChartRows(rows);
 
   const money = new Intl.NumberFormat(undefined, {
     minimumFractionDigits: 2,
@@ -91,6 +102,8 @@ export default async function MetaAdsAnalyticsPage() {
         <MetricCard label="Clicks" value={int.format(totals.clicks)} hint="All click types" />
         <MetricCard label="Lead form submissions" value={int.format(totals.leadSubmissions)} hint="Instant form leads in ads" />
       </div>
+
+      <MetaAdsCharts daily={daily} campaigns={comparisonChartRows} />
 
       <Card className="border-border/80 shadow-sm">
         <CardHeader className="pb-3">
