@@ -1,4 +1,5 @@
 import { aggregateParsedInsights, parseMetaInsightRow, type ParsedMetaInsights } from "@/modules/meta/lib/meta-insights";
+import { dedupeAdsByMetaId } from "@/modules/meta/server/meta-ad-campaign-sync";
 import { graphGet } from "@/modules/meta/server/meta-graph";
 import { getMetaMarketingAccessToken } from "@/modules/meta/server/meta-credentials";
 import { getResolvedMetaAdAccountAct } from "@/modules/meta/server/meta-sync-env";
@@ -147,7 +148,7 @@ export async function fetchAdsWithInsights(accessToken?: string): Promise<MetaAd
     }
   }
 
-  return withInsights;
+  return dedupeAdsByMetaId(withInsights);
 }
 
 export async function fetchCampaignsWithInsights(accessToken?: string): Promise<{

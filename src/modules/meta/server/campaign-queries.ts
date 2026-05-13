@@ -9,6 +9,13 @@ import {
   fetchCampaignsWithInsights,
 } from "@/modules/meta/server/meta-marketing";
 import { syncMetaAdSpendToExpenses } from "@/modules/meta/server/meta-expense-sync";
+import {
+  dedupeAdsByMetaId,
+  normalizeMetaAdId,
+  pruneStaleAdCampaigns,
+  reconcileAllAdCampaignDuplicates,
+  upsertSyncedAdCampaign,
+} from "@/modules/meta/server/meta-ad-campaign-sync";
 
 export const campaignNotDeleted: Prisma.CampaignWhereInput = {
   OR: [{ deletedAt: null }, { deletedAt: { isSet: false } }],
@@ -151,64 +158,20 @@ export async function syncMetaCampaignsFromApi() {
     });
   }
 
-  for (const row of ads) {
-    const externalId = `${META_AD_EXTERNAL_ID_PREFIX}${row.id}`;
-    const campaign = await prisma.campaign.upsert({
-      where: { externalId },
-      create: {
-        externalId,
-        name: row.name,
-        status: row.effective_status ?? row.status ?? null,
-        objective: row.campaign?.name ?? null,
-      },
-      update: {
-        name: row.name,
-        status: row.effective_status ?? row.status ?? null,
-        objective: row.campaign?.name ?? null,
-      },
-    });
+  const uniqueAds = dedupeAdsByMetaId(ads);
+  const activeMetaAdIds = new Set(uniqueAds.map((row) => normalizeMetaAdId(row.id)));
 
-    await prisma.campaignMetric.upsert({
-      where: {
-        campaignId_date: {
-          campaignId: campaign.id,
-          date: metricDate,
-        },
-      },
-      create: {
-        campaignId: campaign.id,
-        date: metricDate,
-        spend: row.insights.spend,
-        impressions: row.insights.impressions,
-        clicks: row.insights.clicks,
-        leads: row.insights.leadSubmissions,
-        conversions: row.insights.messagingConversations,
-        raw: {
-          reach: row.insights.reach,
-          messagingConversations: row.insights.messagingConversations,
-          leadSubmissions: row.insights.leadSubmissions,
-          actions: row.insights.rawActions,
-        },
-      },
-      update: {
-        spend: row.insights.spend,
-        impressions: row.insights.impressions,
-        clicks: row.insights.clicks,
-        leads: row.insights.leadSubmissions,
-        conversions: row.insights.messagingConversations,
-        raw: {
-          reach: row.insights.reach,
-          messagingConversations: row.insights.messagingConversations,
-          leadSubmissions: row.insights.leadSubmissions,
-          actions: row.insights.rawActions,
-        },
-      },
-    });
+  await reconcileAllAdCampaignDuplicates();
+
+  for (const row of uniqueAds) {
+    await upsertSyncedAdCampaign(row, metricDate);
   }
+
+  await pruneStaleAdCampaigns(activeMetaAdIds);
 
   return {
     syncedCampaigns: campaigns.length,
-    syncedAds: ads.length,
+    syncedAds: uniqueAds.length,
     syncedExpenses,
     accountSummary,
     metricDate,
@@ -376,7 +339,9 @@ export async function listAdChartRows(): Promise<MetaAdsCampaignChartRow[]> {
     },
   });
 
-  return ads.map((ad) => {
+  return ads
+    .filter((ad, index, all) => all.findIndex((other) => other.id === ad.id) === index)
+    .map((ad) => {
     const metric = ad.metrics[0];
     const raw = metric?.raw;
     return {
