@@ -64,7 +64,7 @@ export default async function MetaAdsAnalyticsPage() {
     : null;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 pb-10">
+    <div className="w-full space-y-8 pb-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <Button variant="ghost" size="sm" className="-ml-2 w-fit" render={<Link href="/dashboard/meta" />}>
@@ -94,7 +94,7 @@ export default async function MetaAdsAnalyticsPage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         <MetricCard label="Reach" value={int.format(totals.reach)} hint="People who saw ads" />
         <MetricCard label="Messaging conversations" value={int.format(totals.messagingConversations)} hint="Chats started from ads" />
         <MetricCard label="Impressions" value={int.format(totals.impressions)} hint="Times ads were shown" />

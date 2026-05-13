@@ -37,14 +37,17 @@ function sortAds(rows: MetaAdsCampaignChartRow[]) {
 function metricChartData(rows: MetaAdsCampaignChartRow[], key: (typeof METRICS)[number]["key"]) {
   return sortAds(rows).map((row) => ({
     name: row.name,
-    shortName: row.name.length > 36 ? `${row.name.slice(0, 34)}…` : row.name,
     value: row[key],
   }));
 }
 
 function yAxisWidth(names: string[]) {
   const longest = names.reduce((m, n) => Math.max(m, n.length), 0);
-  return Math.min(280, Math.max(140, longest * 6.2));
+  return Math.min(480, Math.max(120, longest * 6.5));
+}
+
+function barChartHeight(rowCount: number) {
+  return Math.max(220, rowCount * 52 + 48);
 }
 
 export function MetaAdsComparison({ ads }: { ads: MetaAdsCampaignChartRow[] }) {
@@ -53,8 +56,8 @@ export function MetaAdsComparison({ ads }: { ads: MetaAdsCampaignChartRow[] }) {
   const sorted = sortAds(ads);
 
   return (
-    <div className="space-y-6">
-      <Card className="border-border/80 shadow-sm">
+    <div className="flex w-full min-w-0 flex-col gap-6">
+      <Card className="w-full min-w-0 border-border/80 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">By ad</CardTitle>
           <CardDescription>
@@ -68,7 +71,7 @@ export function MetaAdsComparison({ ads }: { ads: MetaAdsCampaignChartRow[] }) {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="flex w-full min-w-0 flex-col gap-4">
         {FOCUS_METRICS.map((metric) => (
           <MetricBarChart key={metric.key} ads={sorted} metric={metric} />
         ))}
@@ -85,19 +88,19 @@ function AdMetricCard({
   maxima: MetaAdsCampaignChartRow[];
 }) {
   return (
-    <div className="rounded-xl border border-border/80 bg-muted/20 p-4">
+    <div className="w-full min-w-0 rounded-xl border border-border/80 bg-muted/20 p-4">
       <p className="font-medium leading-snug text-foreground">{ad.name}</p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
         {METRICS.map((metric) => {
           const value = ad[metric.key];
           const max = maxForMetric(maxima, metric.key);
           const pct = max > 0 ? Math.max(value > 0 ? 8 : 0, (value / max) * 100) : 0;
 
           return (
-            <div key={metric.key} className="space-y-1.5">
+            <div key={metric.key} className="min-w-0 space-y-1.5">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="text-muted-foreground">{metric.label}</span>
-                <span className="font-medium tabular-nums text-foreground">{metric.format(value)}</span>
+                <span className="shrink-0 font-medium tabular-nums text-foreground">{metric.format(value)}</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div
@@ -121,38 +124,38 @@ function MetricBarChart({
   metric: (typeof METRICS)[number];
 }) {
   const data = metricChartData(ads, metric.key);
-  const names = data.map((d) => d.shortName);
+  const names = data.map((d) => d.name);
+  const height = barChartHeight(data.length);
 
   return (
-    <Card className="border-border/80 shadow-sm">
+    <Card className="w-full min-w-0 border-border/80 shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{metric.label} by ad</CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
-        <ResponsiveContainer width="100%" height={Math.max(180, data.length * 44)}>
-          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 12, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
-            <XAxis type="number" tick={chartTick} tickFormatter={(v) => metric.format(Number(v))} />
-            <YAxis
-              type="category"
-              dataKey="shortName"
-              width={yAxisWidth(names)}
-              tick={{ ...chartTick, fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              interval={0}
-            />
-            <Tooltip
-              formatter={(value) => [metric.format(Number(value ?? 0)), metric.label]}
-              labelFormatter={(_, payload) => {
-                const item = payload?.[0]?.payload as { name?: string } | undefined;
-                return item?.name ?? "";
-              }}
-              contentStyle={{ borderRadius: 8, borderColor: "var(--color-border)" }}
-            />
-            <Bar dataKey="value" fill={metric.color} radius={[0, 4, 4, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <CardContent className="min-w-0 pt-0">
+        <div className="w-full min-w-0" style={{ height }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} layout="vertical" margin={{ top: 4, right: 24, left: 4, bottom: 4 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
+              <XAxis type="number" tick={chartTick} tickFormatter={(v) => metric.format(Number(v))} />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={yAxisWidth(names)}
+                tick={{ ...chartTick, fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                interval={0}
+              />
+              <Tooltip
+                formatter={(value) => [metric.format(Number(value ?? 0)), metric.label]}
+                labelFormatter={(label) => String(label)}
+                contentStyle={{ borderRadius: 8, borderColor: "var(--color-border)" }}
+              />
+              <Bar dataKey="value" fill={metric.color} radius={[0, 4, 4, 0]} maxBarSize={32} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

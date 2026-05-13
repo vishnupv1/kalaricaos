@@ -21,6 +21,8 @@ const chartTick = { fill: "var(--color-muted-foreground)", fontSize: 11 };
 const gridStroke = "var(--color-border)";
 const colorPrimary = "var(--color-primary)";
 
+const DAILY_CHART_HEIGHT = 280;
+
 function formatMoney(value: number) {
   return `₹${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
@@ -40,7 +42,7 @@ export function MetaAdsCharts({ daily, campaigns }: MetaAdsChartsProps) {
 
   if (!hasDaily && !hasCampaigns) {
     return (
-      <Card className="border-border/80 border-dashed shadow-sm">
+      <Card className="w-full border-border/80 border-dashed shadow-sm">
         <CardContent className="py-10 text-center text-sm text-muted-foreground">
           Sync from Meta to load charts for spend, reach, messaging chats, and conversions.
         </CardContent>
@@ -49,14 +51,14 @@ export function MetaAdsCharts({ daily, campaigns }: MetaAdsChartsProps) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="flex w-full min-w-0 flex-col gap-6">
       {hasDaily ? (
         <>
           <ChartCard title="Spend over time" description="Daily ad spend (last 30 days)">
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={daily} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <ChartFrame height={DAILY_CHART_HEIGHT}>
+              <LineChart data={daily} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="label" tick={chartTick} interval="preserveStartEnd" />
+                <XAxis dataKey="label" tick={chartTick} interval="preserveStartEnd" minTickGap={24} />
                 <YAxis tick={chartTick} tickFormatter={(v) => formatMoney(Number(v))} width={56} />
                 <Tooltip
                   formatter={(value) => [formatMoney(Number(value ?? 0)), "Spend"]}
@@ -65,14 +67,14 @@ export function MetaAdsCharts({ daily, campaigns }: MetaAdsChartsProps) {
                 />
                 <Line type="monotone" dataKey="spend" stroke={colorPrimary} strokeWidth={2} dot={false} />
               </LineChart>
-            </ResponsiveContainer>
+            </ChartFrame>
           </ChartCard>
 
           <ChartCard title="Messaging & lead conversions" description="Daily chats started and lead form submissions">
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={daily} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <ChartFrame height={DAILY_CHART_HEIGHT}>
+              <LineChart data={daily} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="label" tick={chartTick} interval="preserveStartEnd" />
+                <XAxis dataKey="label" tick={chartTick} interval="preserveStartEnd" minTickGap={24} />
                 <YAxis tick={chartTick} width={40} />
                 <Tooltip contentStyle={{ borderRadius: 8, borderColor: "var(--color-border)" }} />
                 <Legend />
@@ -93,14 +95,14 @@ export function MetaAdsCharts({ daily, campaigns }: MetaAdsChartsProps) {
                   dot={false}
                 />
               </LineChart>
-            </ResponsiveContainer>
+            </ChartFrame>
           </ChartCard>
 
           <ChartCard title="Reach & impressions" description="Daily audience reach and ad impressions">
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={daily} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <ChartFrame height={DAILY_CHART_HEIGHT}>
+              <LineChart data={daily} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="label" tick={chartTick} interval="preserveStartEnd" />
+                <XAxis dataKey="label" tick={chartTick} interval="preserveStartEnd" minTickGap={24} />
                 <YAxis tick={chartTick} tickFormatter={(v) => formatInt(Number(v))} width={48} />
                 <Tooltip
                   formatter={(value, name) => [
@@ -120,28 +122,34 @@ export function MetaAdsCharts({ daily, campaigns }: MetaAdsChartsProps) {
                   dot={false}
                 />
               </LineChart>
-            </ResponsiveContainer>
+            </ChartFrame>
           </ChartCard>
 
           <ChartCard title="Clicks" description="Daily clicks across all campaigns">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={daily} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <ChartFrame height={DAILY_CHART_HEIGHT}>
+              <BarChart data={daily} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="label" tick={chartTick} interval="preserveStartEnd" />
+                <XAxis dataKey="label" tick={chartTick} interval="preserveStartEnd" minTickGap={24} />
                 <YAxis tick={chartTick} width={40} />
                 <Tooltip contentStyle={{ borderRadius: 8, borderColor: "var(--color-border)" }} />
                 <Bar dataKey="clicks" name="Clicks" fill={colorPrimary} radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartFrame>
           </ChartCard>
         </>
       ) : null}
 
-      {hasCampaigns ? (
-        <div className={hasDaily ? "lg:col-span-2" : undefined}>
-          <MetaAdsComparison ads={campaigns} />
-        </div>
-      ) : null}
+      {hasCampaigns ? <MetaAdsComparison ads={campaigns} /> : null}
+    </div>
+  );
+}
+
+function ChartFrame({ height, children }: { height: number; children: React.ReactElement }) {
+  return (
+    <div className="w-full min-w-0" style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        {children}
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -149,21 +157,19 @@ export function MetaAdsCharts({ daily, campaigns }: MetaAdsChartsProps) {
 function ChartCard({
   title,
   description,
-  className,
   children,
 }: {
   title: string;
   description: string;
-  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <Card className={className ? `border-border/80 shadow-sm ${className}` : "border-border/80 shadow-sm"}>
+    <Card className="w-full min-w-0 border-border/80 shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="pt-0">{children}</CardContent>
+      <CardContent className="min-w-0 pt-0">{children}</CardContent>
     </Card>
   );
 }
